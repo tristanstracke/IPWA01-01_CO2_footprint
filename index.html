@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="de" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO2-Footprint - Emissionsdaten weltweit</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Footer soll immer unten bleiben */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        /* Spalten-Header klickbar machen */
+        th.sortierbar {
+            cursor: pointer;
+        }
+
+        th.sortierbar:hover {
+            background-color: #b2dfdb;
+        }
+
+        /* Pfeil zeigt Sortierrichtung */
+        th.sortierbar.auf::after { content: " (aufsteigend)"; font-size: 0.7rem; }
+        th.sortierbar.ab::after  { content: " (absteigend)"; font-size: 0.7rem; }
+
+        footer a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        /* Auf schmalen Bildschirmen stapeln sich die Spalten untereinander */
+        @media (max-width: 767px) {
+            #lokale-nav, #inhalt {
+                order: unset !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header mit globaler Navigation -->
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+
+            <!-- Logo -->
+            <a class="navbar-brand" href="#">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 16 16">
+                    <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM8 5.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                </svg>
+                CO2-Footprint
+            </a>
+
+            <!-- Hamburger für Smartphones -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#globalNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Globale Links -->
+            <div class="collapse navbar-collapse" id="globalNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="#uebersicht">Startseite</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#co2-daten">CO2-Daten</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#ueber-uns">Über uns</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#kontakt">Kontakt</a></li>
+                </ul>
+                <!-- Schriftrichtung wechseln -->
+                <button class="btn btn-outline-light ms-3" onclick="toggleRTL()">RTL / LTR</button>
+            </div>
+
+        </div>
+    </nav>
+</header>
+
+
+<!-- Hauptinhalt -->
+<main class="container my-4">
+    <div class="row g-4" id="layout-row">
+
+        <!-- Lokale Navigation -->
+        <nav id="lokale-nav" class="col-md-3 order-1">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white fw-bold">Navigation</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><a href="#uebersicht">Übersicht</a></li>
+                    <li class="list-group-item"><a href="#co2-daten">CO2-Daten</a></li>
+                    <li class="list-group-item"><a href="#ueber-uns">Über uns</a></li>
+                    <li class="list-group-item"><a href="#kontakt">Kontakt</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Inhalt -->
+        <div id="inhalt" class="col-md-9 order-2">
+
+            <!-- Einleitung -->
+            <section id="uebersicht" class="mb-5">
+                <h1 class="text-success">CO2-Emissionen weltweit</h1>
+                <p class="lead">
+                    Diese Seite bietet eine öffentlich zugängliche Übersicht über die jährlichen
+                    CO2-Emissionen großer Unternehmen und Länder weltweit. Transparenz ist der erste
+                    Schritt zum Klimaschutz.
+                </p>
+                <div class="alert alert-warning">
+                    <strong>Hinweis:</strong> Alle Daten sind fiktiv und dienen nur zur Demonstration.
+                </div>
+            </section>
+
+            <!-- CO2-Tabelle -->
+            <section id="co2-daten" class="mb-5">
+                <h2 class="text-success mb-3">CO2-Emissionsdaten</h2>
+
+                <div class="mb-3">
+                    <label for="filter-eingabe" class="form-label">Tabelle filtern:</label>
+                    <input type="text" id="filter-eingabe" class="form-control"
+                           placeholder="Land oder Unternehmen eingeben..."
+                           oninput="filterTabelle()">
+                </div>
+
+                <div id="keine-ergebnisse" class="alert alert-info d-none">
+                    Keine Einträge gefunden.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered" id="co2-tabelle">
+                        <thead class="table-success">
+                            <tr>
+                                <th class="sortierbar" onclick="sortiereTabelle(0)">Land</th>
+                                <th class="sortierbar" onclick="sortiereTabelle(1)">Unternehmen</th>
+                                <th class="sortierbar" onclick="sortiereTabelle(2)">CO2 (Mio. t)</th>
+                                <th class="sortierbar" onclick="sortiereTabelle(3)">Jahr</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelle-body">
+                            <!-- wird per JavaScript befüllt -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Über uns -->
+            <section id="ueber-uns" class="mb-5">
+                <h2 class="text-success">Über uns</h2>
+                <p>
+                    Wir sind eine gemeinnützige Organisation die sich dem Klimaschutz verschrieben hat.
+                    Unser Ziel ist es Transparenz über CO2-Emissionen herzustellen und das Bewusstsein
+                    für den Klimawandel zu schärfen.
+                </p>
+            </section>
+
+            <!-- Kontakt -->
+            <section id="kontakt" class="mb-5">
+                <h2 class="text-success">Kontakt</h2>
+                <p>Bei Fragen können Sie uns gerne kontaktieren:</p>
+                <p>
+                    E-Mail: <a href="mailto:info@co2-footprint.org">info@co2-footprint.org</a><br>
+                    Adresse: Musterstraße 1, 12345 Musterstadt
+                </p>
+            </section>
+
+        </div>
+    </div>
+</main>
+
+
+<!-- Footer mit rechtlichen Hinweisen -->
+<footer class="bg-dark text-secondary py-4 mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <p class="fw-bold text-white mb-1">CO2-Footprint</p>
+                <p class="mb-0 small">Eine Initiative für mehr Klimatransparenz.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-1">
+                    <a href="#">Impressum</a>
+                    <span class="mx-2">|</span>
+                    <a href="#">Datenschutz</a>
+                    <span class="mx-2">|</span>
+                    <a href="#">Barrierefreiheit</a>
+                </p>
+                <p class="mb-0 small">&copy; 2026 CO2-Footprint. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Fiktive CO2-Daten
+    const co2Daten = [
+        { land: "Deutschland", unternehmen: "EnergieAG", co2: 85.2, jahr: 2023 },
+        { land: "USA", unternehmen: "PetroCorp", co2: 312.7, jahr: 2023 },
+        { land: "China", unternehmen: "SteelGiant", co2: 520.1, jahr: 2023 },
+        { land: "Indien", unternehmen: "CoalPower Ltd.", co2: 198.4, jahr: 2023 },
+        { land: "Russland", unternehmen: "GasProduction", co2: 274.3, jahr: 2022 },
+        { land: "Brasilien", unternehmen: "AgroFuel S.A.", co2: 91.6, jahr: 2022 },
+        { land: "Japan", unternehmen: "AutoIndustrie KK", co2: 67.8, jahr: 2023 },
+        { land: "Kanada", unternehmen: "OilSands Inc.", co2: 143.5, jahr: 2023 },
+        { land: "Australien", unternehmen: "MineralGroup", co2: 110.2, jahr: 2022 },
+        { land: "Frankreich", unternehmen: "NuclearPower SA", co2: 32.1, jahr: 2023 },
+        { land: "Großbritannien", unternehmen: "FinanceCarbon Ltd.", co2: 58.9, jahr: 2022 },
+        { land: "Südafrika", unternehmen: "CoalEnergy Co.", co2: 167.3, jahr: 2023 },
+        { land: "Mexiko", unternehmen: "PetroleumMex", co2: 99.4, jahr: 2023 },
+        { land: "Saudi-Arabien", unternehmen: "OilExport Corp.", co2: 389.2, jahr: 2022 },
+        { land: "Polen", unternehmen: "KohleWerke GmbH", co2: 72.5, jahr: 2023 }
+    ];
+
+    // Sortierzustand
+    let sortierteSpalte = -1;
+    let sortierungAufwarts = true;
+
+    // Tabelle mit Daten befüllen
+    // Wichtig: textContent statt innerHTML verwenden, damit kein Code ausgeführt werden kann
+    function zeigeTabelle(daten) {
+        const tbody = document.getElementById("tabelle-body");
+        const keineErgebnisse = document.getElementById("keine-ergebnisse");
+
+        tbody.innerHTML = "";
+
+        if (daten.length === 0) {
+            keineErgebnisse.classList.remove("d-none");
+            return;
+        }
+
+        keineErgebnisse.classList.add("d-none");
+
+        daten.forEach(function(eintrag) {
+            const zeile = document.createElement("tr");
+
+            const td1 = document.createElement("td");
+            td1.textContent = eintrag.land;
+            zeile.appendChild(td1);
+
+            const td2 = document.createElement("td");
+            td2.textContent = eintrag.unternehmen;
+            zeile.appendChild(td2);
+
+            const td3 = document.createElement("td");
+            td3.textContent = eintrag.co2.toFixed(1);
+            zeile.appendChild(td3);
+
+            const td4 = document.createElement("td");
+            td4.textContent = eintrag.jahr;
+            zeile.appendChild(td4);
+
+            tbody.appendChild(zeile);
+        });
+    }
+
+    // Filterfunktion - sucht nach Land oder Unternehmen
+    function filterTabelle() {
+        const eingabe = document.getElementById("filter-eingabe");
+        const suchtext = eingabe.value.toLowerCase().trim();
+
+        const gefiltert = co2Daten.filter(function(eintrag) {
+            return eintrag.land.toLowerCase().includes(suchtext) ||
+                   eintrag.unternehmen.toLowerCase().includes(suchtext);
+        });
+
+        const sortiert = sortiereArray(gefiltert, sortierteSpalte, sortierungAufwarts);
+        zeigeTabelle(sortiert);
+    }
+
+    // Array sortieren
+    function sortiereArray(daten, spalte, aufwaerts) {
+        if (spalte < 0) return daten;
+
+        daten.sort(function(a, b) {
+            let wertA;
+            let wertB;
+
+            if (spalte === 0) {
+                wertA = a.land;
+                wertB = b.land;
+            } else if (spalte === 1) {
+                wertA = a.unternehmen;
+                wertB = b.unternehmen;
+            } else if (spalte === 2) {
+                wertA = a.co2;
+                wertB = b.co2;
+            } else {
+                wertA = a.jahr;
+                wertB = b.jahr;
+            }
+
+            if (wertA < wertB) return aufwaerts ? -1 : 1;
+            if (wertA > wertB) return aufwaerts ? 1 : -1;
+            return 0;
+        });
+
+        return daten;
+    }
+
+    // Wird aufgerufen wenn man auf einen Spalten-Header klickt
+    function sortiereTabelle(spalte) {
+        if (sortierteSpalte === spalte) {
+            sortierungAufwarts = !sortierungAufwarts;
+        } else {
+            sortierteSpalte = spalte;
+            sortierungAufwarts = true;
+        }
+
+        // Pfeil-Klassen aktualisieren
+        const headers = document.querySelectorAll("th.sortierbar");
+        headers.forEach(function(th, index) {
+            th.classList.remove("auf");
+            th.classList.remove("ab");
+            if (index === spalte) {
+                if (sortierungAufwarts) {
+                    th.classList.add("auf");
+                } else {
+                    th.classList.add("ab");
+                }
+            }
+        });
+
+        filterTabelle();
+    }
+
+    // RTL/LTR umschalten
+    // Es genügt, die Leserichtung (dir-Attribut) umzuschalten: Durch das mit der
+    // Leserichtung gespiegelte Flex-Layout wandert die lokale Navigation automatisch
+    // auf die jeweils andere Seite.
+    function toggleRTL() {
+        const html = document.documentElement;
+
+        if (html.getAttribute("dir") === "ltr") {
+            html.setAttribute("dir", "rtl");
+        } else {
+            html.setAttribute("dir", "ltr");
+        }
+    }
+
+    // Tabelle beim Laden der Seite befüllen
+    zeigeTabelle(co2Daten);
+
+</script>
+
+</body>
+</html>
